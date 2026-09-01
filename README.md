@@ -1,6 +1,6 @@
 # ⏳ Countdown Events App
 
-A beautiful web app to track multiple countdown timers for your upcoming events!
+
 
 ## Features
 
