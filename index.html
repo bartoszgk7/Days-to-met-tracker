@@ -400,7 +400,7 @@
                     </div>
                 </div>
                 <p style="grid-column:1/-1;font-size:0.85em;color:#888;margin-bottom:15px;">
-                    The tracker photos are fixed: <code>Obraz1.JPEG</code> (Today) and <code>Obraz2.JPEG</code> (Target) — place those two files next to <code>index.html</code> in your repo.
+                    
                 </p>
                 <div class="form-buttons">
                     <button type="submit" class="btn-primary">Add Event</button>
@@ -426,8 +426,8 @@
         const eventTimeInput = document.getElementById('eventTime');
 
         // Fixed reference photos for the tracker — must live next to index.html in the repo
-        const CURRENT_PHOTO_SRC = 'Obraz1.jpeg';
-        const TARGET_PHOTO_SRC = 'Obraz2.jpeg';
+        const CURRENT_PHOTO_SRC = 'Obraz1.JPEG';
+        const TARGET_PHOTO_SRC = 'Obraz2.JPEG';
 
         // Load events from localStorage
         let events = JSON.parse(localStorage.getItem('countdownEvents')) || [];
