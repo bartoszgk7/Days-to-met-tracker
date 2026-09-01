@@ -400,7 +400,7 @@
                     </div>
                 </div>
                 <p style="grid-column:1/-1;font-size:0.85em;color:#888;margin-bottom:15px;">
-                    
+                    The tracker photos are fixed: <code>Obraz1.JPEG</code> (Today) and <code>Obraz2.JPEG</code> (Target) — place those two files next to <code>index.html</code> in your repo.
                 </p>
                 <div class="form-buttons">
                     <button type="submit" class="btn-primary">Add Event</button>
@@ -417,7 +417,26 @@
         </div>
     </div>
 
+    <!-- Firebase (free cloud database) — powers real-time sync across your phone/computer -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <script>
+        // ===== PASTE YOUR OWN FIREBASE CONFIG HERE (see setup instructions) =====
+	const firebaseConfig = {
+  		apiKey: "AIzaSyDIFfDuCEFsyd9-3G5y0Vvncp5ISCqCz1I",
+  		authDomain: "days-to-met-tracker.firebaseapp.com",
+ 		projectId: "days-to-met-tracker",
+  		storageBucket: "days-to-met-tracker.firebasestorage.app",
+  		messagingSenderId: "353573047603",
+  		appId: "1:353573047603:web:3b220002b61dc1e4aa8246"
+	};
+        // ==========================================================================
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const eventsCollection = db.collection('events');
+
         // Initialize app
         const eventsContainer = document.getElementById('eventsContainer');
         const eventForm = document.getElementById('eventForm');
@@ -429,44 +448,50 @@
         const CURRENT_PHOTO_SRC = 'Obraz1.JPEG';
         const TARGET_PHOTO_SRC = 'Obraz2.JPEG';
 
-        // Load events from localStorage
-        let events = JSON.parse(localStorage.getItem('countdownEvents')) || [];
+        // Events now live in Firestore, not localStorage — this array is just an
+        // in-memory mirror kept in sync by the onSnapshot listener below.
+        let events = [];
 
         // Keeps references to each card's live-updating elements so the
         // per-second tick only touches text/style, never rebuilds the DOM
         // (rebuilding every second was what caused the page to jump).
         let elementRefs = {};
 
+        // Real-time listener: fires immediately on load, then again any time
+        // ANY device adds/deletes an event — this is what makes sync work.
+        eventsCollection.orderBy('createdAt').onSnapshot((snapshot) => {
+            events = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderEvents();
+        }, (error) => {
+            console.error('Firestore sync error:', error);
+            eventsContainer.innerHTML = `
+                <div class="empty-state">
+                    <h2>Sync not connected</h2>
+                    <p>Check that firebaseConfig is filled in and Firestore is enabled. See console for details.</p>
+                </div>
+            `;
+        });
+
         // Add event
         eventForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
             const newEvent = {
-                id: Date.now(),
                 name: eventNameInput.value,
                 date: eventDateInput.value,
                 time: eventTimeInput.value || '00:00',
                 createdAt: new Date().toISOString()
             };
 
-            events.push(newEvent);
-            saveEvents();
+            eventsCollection.add(newEvent); // onSnapshot picks this up automatically, on every device
             eventForm.reset();
-            renderEvents();
         });
 
         // Delete event
         function deleteEvent(id) {
-            events = events.filter(e => e.id !== id);
-            saveEvents();
-            renderEvents();
+            eventsCollection.doc(id).delete(); // onSnapshot picks this up automatically, on every device
         }
         window.deleteEvent = deleteEvent;
-
-        // Save events to localStorage
-        function saveEvents() {
-            localStorage.setItem('countdownEvents', JSON.stringify(events));
-        }
 
         function getTargetDate(event) {
             return new Date(`${event.date}T${event.time || '00:00'}`);
@@ -511,7 +536,7 @@
         }
 
         function photoBubbleContent(photoSrc, fallbackEmoji) {
-            // onerror swaps in the emoji if Obraz1.jpeg/Obraz2.jpeg isn't found in the repo yet
+            // onerror swaps in the emoji if Obraz1.JPEG/Obraz2.JPEG isn't found in the repo yet
             return `<img src="${photoSrc}" alt="" onerror="this.parentElement.textContent='${fallbackEmoji}'">`;
         }
 
@@ -582,7 +607,7 @@
 
                             <div class="event-footer">
                                 <span class="status" data-role="status">🎯 Upcoming</span>
-                                <button class="btn-delete" onclick="deleteEvent(${event.id})">Delete</button>
+                                <button class="btn-delete" onclick="deleteEvent('${event.id}')">Delete</button>
                             </div>
                         </div>
                     </div>
