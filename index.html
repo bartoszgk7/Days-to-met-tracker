@@ -90,23 +90,34 @@
             grid-column: 1 / -1;
         }
 
-        .photo-upload {
+        .photo-upload-row {
             grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .photo-upload {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .photo-upload input[type="file"] {
             flex: 1;
+            min-width: 0;
+            padding: 10px;
+            font-size: 0.85em;
         }
 
         .photo-preview {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             object-fit: cover;
             display: none;
+            flex-shrink: 0;
+            border: 2px solid #e0e0e0;
         }
 
         .photo-preview.show {
@@ -163,7 +174,7 @@
 
         .events-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 25px;
             margin-bottom: 30px;
         }
@@ -183,25 +194,6 @@
             box-shadow: 0 15px 40px rgba(0,0,0,0.3);
         }
 
-        .event-photo {
-            width: 100%;
-            height: 200px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 3em;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .event-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
         .event-content {
             padding: 25px;
             flex: 1;
@@ -213,13 +205,92 @@
             font-size: 1.5em;
             font-weight: 700;
             color: #333;
-            margin-bottom: 15px;
+            margin-bottom: 6px;
         }
 
         .event-date {
             font-size: 0.9em;
             color: #888;
             margin-bottom: 20px;
+        }
+
+        /* Converging photo track */
+        .convergence-track {
+            position: relative;
+            height: 90px;
+            margin: 10px 0 30px 0;
+            padding: 0 38px;
+        }
+
+        .track-line {
+            position: absolute;
+            top: 50%;
+            left: 38px;
+            right: 38px;
+            height: 4px;
+            background: #eef0f5;
+            transform: translateY(-50%);
+            border-radius: 2px;
+        }
+
+        .track-progress-line {
+            position: absolute;
+            top: 50%;
+            left: 38px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transform: translateY(-50%);
+            border-radius: 2px;
+            width: 0%;
+        }
+
+        .photo-bubble-wrap {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .photo-bubble-wrap.target {
+            right: 0;
+        }
+
+        .photo-bubble-wrap.current {
+            left: 0;
+            transition: left 1s linear;
+        }
+
+        .bubble-label {
+            font-size: 0.65em;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            white-space: nowrap;
+        }
+
+        .photo-bubble {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4em;
+        }
+
+        .photo-bubble img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .countdown {
@@ -232,7 +303,7 @@
         .countdown-item {
             text-align: center;
             background: #f5f5f5;
-            padding: 15px;
+            padding: 15px 5px;
             border-radius: 8px;
         }
 
@@ -275,6 +346,7 @@
             background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             border-radius: 4px;
             transition: width 0.3s ease;
+            width: 0%;
         }
 
         .event-footer {
@@ -327,6 +399,10 @@
                 grid-template-columns: 1fr;
             }
 
+            .photo-upload-row {
+                grid-template-columns: 1fr;
+            }
+
             .events-grid {
                 grid-template-columns: 1fr;
             }
@@ -340,8 +416,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>🎯 Countdown Events</h1>
-            <p>Track multiple events counting down to the moment</p>
+            <h1>🎯 Days until we meet/h1>
+            <p>Track multiple events when I will see My Princess</p>
         </header>
 
         <div class="add-event-section">
@@ -356,10 +432,25 @@
                         <label for="eventDate">Target Date</label>
                         <input type="date" id="eventDate" required>
                     </div>
-                    <div class="form-group full photo-upload">
-                        <label for="eventPhoto">Upload Photo (optional)</label>
-                        <input type="file" id="eventPhoto" accept="image/*">
-                        <img id="photoPreview" class="photo-preview" alt="Preview">
+                    <div class="form-group full">
+                        <label for="eventTime">Target Time (optional, defaults to midnight)</label>
+                        <input type="time" id="eventTime">
+                    </div>
+                    <div class="photo-upload-row">
+                        <div class="photo-upload">
+                            <div style="flex:1">
+                                <label for="currentPhoto" style="display:block;margin-bottom:6px;font-weight:600;color:#555;font-size:0.9em;">Current Photo (optional)</label>
+                                <input type="file" id="currentPhoto" accept="image/*">
+                            </div>
+                            <img id="currentPhotoPreview" class="photo-preview" alt="Preview">
+                        </div>
+                        <div class="photo-upload">
+                            <div style="flex:1">
+                                <label for="targetPhoto" style="display:block;margin-bottom:6px;font-weight:600;color:#555;font-size:0.9em;">Target Photo (optional)</label>
+                                <input type="file" id="targetPhoto" accept="image/*">
+                            </div>
+                            <img id="targetPhotoPreview" class="photo-preview" alt="Preview">
+                        </div>
                     </div>
                 </div>
                 <div class="form-buttons">
@@ -383,24 +474,36 @@
         const eventForm = document.getElementById('eventForm');
         const eventNameInput = document.getElementById('eventName');
         const eventDateInput = document.getElementById('eventDate');
-        const eventPhotoInput = document.getElementById('eventPhoto');
-        const photoPreview = document.getElementById('photoPreview');
+        const eventTimeInput = document.getElementById('eventTime');
+        const currentPhotoInput = document.getElementById('currentPhoto');
+        const targetPhotoInput = document.getElementById('targetPhoto');
+        const currentPhotoPreview = document.getElementById('currentPhotoPreview');
+        const targetPhotoPreview = document.getElementById('targetPhotoPreview');
 
         // Load events from localStorage
         let events = JSON.parse(localStorage.getItem('countdownEvents')) || [];
 
-        // Photo preview
-        eventPhotoInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    photoPreview.src = event.target.result;
-                    photoPreview.classList.add('show');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        // Keeps references to each card's live-updating elements so the
+        // per-second tick only touches text/style, never rebuilds the DOM
+        // (rebuilding every second was what caused the page to jump).
+        let elementRefs = {};
+
+        // Photo previews
+        function wirePreview(input, previewEl) {
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        previewEl.src = event.target.result;
+                        previewEl.classList.add('show');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        wirePreview(currentPhotoInput, currentPhotoPreview);
+        wirePreview(targetPhotoInput, targetPhotoPreview);
 
         // Add event
         eventForm.addEventListener('submit', (e) => {
@@ -410,15 +513,19 @@
                 id: Date.now(),
                 name: eventNameInput.value,
                 date: eventDateInput.value,
-                photo: photoPreview.src || null,
+                time: eventTimeInput.value || '00:00',
+                currentPhoto: currentPhotoPreview.src && currentPhotoPreview.classList.contains('show') ? currentPhotoPreview.src : null,
+                targetPhoto: targetPhotoPreview.src && targetPhotoPreview.classList.contains('show') ? targetPhotoPreview.src : null,
                 createdAt: new Date().toISOString()
             };
 
             events.push(newEvent);
             saveEvents();
             eventForm.reset();
-            photoPreview.classList.remove('show');
-            photoPreview.src = '';
+            currentPhotoPreview.classList.remove('show');
+            currentPhotoPreview.src = '';
+            targetPhotoPreview.classList.remove('show');
+            targetPhotoPreview.src = '';
             renderEvents();
         });
 
@@ -428,26 +535,25 @@
             saveEvents();
             renderEvents();
         }
+        window.deleteEvent = deleteEvent;
 
         // Save events to localStorage
         function saveEvents() {
             localStorage.setItem('countdownEvents', JSON.stringify(events));
         }
 
+        function getTargetDate(event) {
+            return new Date(`${event.date}T${event.time || '00:00'}`);
+        }
+
         // Calculate countdown
-        function calculateCountdown(targetDate) {
-            const target = new Date(targetDate).getTime();
+        function calculateCountdown(event) {
+            const target = getTargetDate(event).getTime();
             const now = new Date().getTime();
             const difference = target - now;
 
-            if (difference < 0) {
-                return {
-                    days: 0,
-                    hours: 0,
-                    minutes: 0,
-                    seconds: 0,
-                    passed: true
-                };
+            if (difference <= 0) {
+                return { days: 0, hours: 0, minutes: 0, seconds: 0, passed: true };
             }
 
             return {
@@ -459,28 +565,33 @@
             };
         }
 
-        // Calculate progress percentage
-        function calculateProgress(targetDate) {
-            const target = new Date(targetDate).getTime();
+        // Progress from when the event was ADDED (createdAt) to the target
+        function calculateProgress(event) {
+            const target = getTargetDate(event).getTime();
+            const created = new Date(event.createdAt).getTime();
             const now = new Date().getTime();
-            const created = new Date('2024-01-01').getTime(); // You can adjust this
 
-            const totalDays = Math.floor((target - created) / (1000 * 60 * 60 * 24));
-            const remainingDays = Math.floor((target - now) / (1000 * 60 * 60 * 24));
+            const totalSpan = target - created;
+            if (totalSpan <= 0) return 100;
 
-            if (totalDays <= 0) return 0;
-            return Math.max(0, Math.min(100, ((totalDays - remainingDays) / totalDays) * 100));
+            const elapsed = now - created;
+            return Math.max(0, Math.min(100, (elapsed / totalSpan) * 100));
         }
 
-        // Get status
-        function getStatus(targetDate, countdown) {
+        function getStatus(countdown) {
             if (countdown.passed) return 'passed';
             if (countdown.days === 0 && countdown.hours < 24) return 'today';
             return 'upcoming';
         }
 
-        // Render events
+        function photoBubbleContent(photoSrc, fallbackEmoji) {
+            return photoSrc ? `<img src="${photoSrc}" alt="">` : fallbackEmoji;
+        }
+
+        // Full render — only called when events are added/deleted/loaded
         function renderEvents() {
+            elementRefs = {};
+
             if (events.length === 0) {
                 eventsContainer.innerHTML = `
                     <div class="empty-state">
@@ -492,34 +603,42 @@
             }
 
             eventsContainer.innerHTML = events.map(event => {
-                const countdown = calculateCountdown(event.date);
-                const progress = calculateProgress(event.date);
-                const status = getStatus(event.date, countdown);
+                const targetDateObj = getTargetDate(event);
 
                 return `
                     <div class="event-card">
-                        <div class="event-photo">
-                            ${event.photo ? `<img src="${event.photo}" alt="${event.name}">` : '📅'}
-                        </div>
                         <div class="event-content">
                             <h3 class="event-title">${event.name}</h3>
-                            <p class="event-date">${new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                            <p class="event-date">${targetDateObj.toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+
+                            <div class="convergence-track">
+                                <div class="track-line"></div>
+                                <div class="track-progress-line" data-role="track-progress"></div>
+                                <div class="photo-bubble-wrap current" data-role="current-wrap">
+                                    <span class="bubble-label">Today</span>
+                                    <div class="photo-bubble">${photoBubbleContent(event.currentPhoto, '📍')}</div>
+                                </div>
+                                <div class="photo-bubble-wrap target">
+                                    <span class="bubble-label">${event.name.length > 10 ? event.name.slice(0, 10) + '…' : event.name}</span>
+                                    <div class="photo-bubble">${photoBubbleContent(event.targetPhoto, '🎯')}</div>
+                                </div>
+                            </div>
 
                             <div class="countdown">
                                 <div class="countdown-item">
-                                    <div class="countdown-value">${countdown.days}</div>
+                                    <div class="countdown-value" data-role="days">0</div>
                                     <div class="countdown-label">Days</div>
                                 </div>
                                 <div class="countdown-item">
-                                    <div class="countdown-value">${countdown.hours}</div>
+                                    <div class="countdown-value" data-role="hours">0</div>
                                     <div class="countdown-label">Hours</div>
                                 </div>
                                 <div class="countdown-item">
-                                    <div class="countdown-value">${countdown.minutes}</div>
+                                    <div class="countdown-value" data-role="minutes">0</div>
                                     <div class="countdown-label">Minutes</div>
                                 </div>
                                 <div class="countdown-item">
-                                    <div class="countdown-value">${countdown.seconds}</div>
+                                    <div class="countdown-value" data-role="seconds">0</div>
                                     <div class="countdown-label">Seconds</div>
                                 </div>
                             </div>
@@ -527,27 +646,71 @@
                             <div class="progress-section">
                                 <div class="progress-label">
                                     <span>Progress</span>
-                                    <span>${progress.toFixed(1)}%</span>
+                                    <span data-role="progress-text">0%</span>
                                 </div>
                                 <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${progress}%"></div>
+                                    <div class="progress-fill" data-role="progress-fill"></div>
                                 </div>
                             </div>
 
                             <div class="event-footer">
-                                <span class="status ${status}">
-                                    ${status === 'passed' ? '✓ Passed' : status === 'today' ? '⚡ Today!' : '🎯 Upcoming'}
-                                </span>
+                                <span class="status" data-role="status">🎯 Upcoming</span>
                                 <button class="btn-delete" onclick="deleteEvent(${event.id})">Delete</button>
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
+
+            // Grab live refs for each card in the same order as `events`
+            const cards = eventsContainer.querySelectorAll('.event-card');
+            events.forEach((event, i) => {
+                const card = cards[i];
+                elementRefs[event.id] = {
+                    days: card.querySelector('[data-role="days"]'),
+                    hours: card.querySelector('[data-role="hours"]'),
+                    minutes: card.querySelector('[data-role="minutes"]'),
+                    seconds: card.querySelector('[data-role="seconds"]'),
+                    progressFill: card.querySelector('[data-role="progress-fill"]'),
+                    progressText: card.querySelector('[data-role="progress-text"]'),
+                    trackProgress: card.querySelector('[data-role="track-progress"]'),
+                    currentWrap: card.querySelector('[data-role="current-wrap"]'),
+                    status: card.querySelector('[data-role="status"]')
+                };
+            });
+
+            tick(); // populate values immediately instead of waiting 1s
         }
 
-        // Update countdowns every second
-        setInterval(renderEvents, 1000);
+        // Lightweight per-second update — no DOM rebuild, so no jump/flicker
+        function tick() {
+            events.forEach(event => {
+                const refs = elementRefs[event.id];
+                if (!refs) return;
+
+                const countdown = calculateCountdown(event);
+                const progress = calculateProgress(event);
+                const status = getStatus(countdown);
+
+                refs.days.textContent = countdown.days;
+                refs.hours.textContent = countdown.hours;
+                refs.minutes.textContent = countdown.minutes;
+                refs.seconds.textContent = countdown.seconds;
+
+                refs.progressFill.style.width = progress + '%';
+                refs.trackProgress.style.width = progress + '%';
+                refs.progressText.textContent = progress.toFixed(1) + '%';
+
+                // Move the "current" bubble along the track toward the target bubble
+                refs.currentWrap.style.left = `calc(${progress}% - ${(progress / 100) * 60}px)`;
+
+                refs.status.className = 'status ' + status;
+                refs.status.textContent = status === 'passed' ? '✓ Passed' : status === 'today' ? '⚡ Today!' : '🎯 Upcoming';
+            });
+        }
+
+        // Update countdowns every second (lightweight — see tick())
+        setInterval(tick, 1000);
 
         // Initial render
         renderEvents();
